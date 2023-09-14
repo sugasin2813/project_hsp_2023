@@ -1,8 +1,8 @@
 #include "hsp3dish.as"
 
-arrow_y = 175
+screen 0, 640, 480
 
-*menu
+*menu_init
 	celload "./img/menu.png",1
 	celload "./img/title.png",2
 	celload "./img/play_button.png",3
@@ -10,6 +10,8 @@ arrow_y = 175
 	celload "./img/credit_button.png",5
 	celload "./img/arrow.png",6
 
+	arrow_y = 175
+*menu
 	redraw 0
 	pos 0,0
 	celput 1
@@ -31,7 +33,7 @@ arrow_y = 175
 	celput 6,0,0.05,0.05
 	
 	redraw 1
-	await 1000/30
+	await 1000/8.5
 
 	getkey a,40
 	if a=1 : arrow_y = arrow_y + 100
@@ -43,22 +45,231 @@ arrow_y = 175
 
 	getkey a,13
 	if a=1 {
-		if arrow_y = 175 : goto *play
+		if arrow_y = 175 : goto *play_init
+		if arrow_y = 275 : goto *howto_init
+		if arrow_y = 375 : goto *credit_init
 	}
+
+	getkey a,27
+	if a=1 : goto *exit_init
 
 	goto *menu
 
-*play
-	celload "./img/play.png",1
+*howto_init
+	celload "./img/menu.png",1
+	celload "./img/howto.png",2
 
+*howto
 	redraw 0
 	pos 0,0
 	celput 1
 
+	gmode 2
+	pos 50,50
+	celput 2,0,0.15,0.15
+	
 	redraw 1
+
+	await 1000/30
+	
+	getkey a,27
+	if a=1 : goto *menu_init
+
+	goto *howto
+	
+*credit_init
+	celload "./img/menu.png",1
+	celload "./img/credit.png",2
+
+*credit
+	redraw 0
+	pos 0,0
+	celput 1
+
+	gmode 2
+	pos 50,50
+	celput 2,0,0.15,0.15
+	
+	redraw 1
+
+	await 1000/30
+	
+	getkey a,27
+	if a=1 : goto *menu_init
+
+	goto *credit
+
+
+*play_init
+	celload "./img/play.png",1
+	celload "./img/tamadot.png",2
+	celload "./img/parts.png",3
+
+	celdiv 2,64,64
+	celdiv 3,40,40
+
+	player_x = 320
+	prev_x = 320
+	player_y = 420
+	move_x = 15
+	life = 3
+
+	id = 0
+	ima_button = 0
+
+	period = 10
+	count = 0
+	tail = 0
+	arrow_fig = 0
+	dim arrow, 20
+	dim arrow_x, 20
+	dim arrow_y, 20
+
+	goto *play
+
+*play
+	redraw 0
+	pos 0,0
+	celput 1
+
+	pos player_x,player_y
+	if ima_button = 0 : celput 2,4
+	if ima_button = 1 : celput 2,12+id
+	if ima_button = -1 : celput 2, 28+id
+
+	repeat arrow_fig
+		if cnt < tail : continue
+		pos arrow_x(cnt),arrow_y(cnt)
+		celput 3,4,,,3.15
+	loop
+
+	repeat life
+		pos 40*cnt,0
+		celput 2,45
+	loop
+
+	redraw 1
+
+	await 1000/30
+
+	count = count + 1
+	if(count > period){
+		arrow_x(arrow_fig) = rnd(10) * 64
+		arrow_y(arrow_fig) = 0
+		count = 0
+		arrow_fig = arrow_fig + 1
+	}
+
+	ima_button = 0
+	getkey a,37
+	if a=1 : {
+		ima_button = 1
+		player_x = player_x - move_x
+		mae_button = ima_button
+		if player_x < 0 : player_x = 0
+	}
+
+	getkey a,39
+	if a=1 : {
+		ima_button = -1
+		player_x = player_x + move_x
+		mae_button = ima_button
+		if player_x > 580 : player_x = 580
+	}
+
+	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
+	
+	repeat arrow_fig
+		if cnt < tail : continue
+		arrow_y(cnt) = arrow_y(cnt) + 10
+		if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
+			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 {
+				life = life - 1
+				if life = 0 : goto *failed_init
+			}
+		}
+		if arrow_y(cnt) > 480 : tail = cnt
+	loop
+
+	redraw 1
+
+	getkey a,27
+	if a=1 : goto *menu_init
+
+	goto *play
+
+
+*failed_init
+	celload "./img/play.png",1
+	celload "./img/gameover.png",2
+	celload "./img/tamadot.png",3
+
+*failed
+	redraw 0
+	pos 0,0
+	celput 1
+
+	pos 80,100
+	celput 2,0,0.5,0.5,0
+	
+	pos player_x, player_y
+	celput 3,35
+
+	redraw 1
+
 	await 1000/30
 
 	getkey a,27
-	if a=1 : goto *menu
+	if a=1 {
+		if arrow_y = 175 : goto *menu_init
+	}
 
-	goto *play	
+	goto *failed
+
+*exit_init
+	celload "./img/menu.png",1
+	celload "./img/end.png",2
+	celload "./img/end_yes.png",3
+	celload "./img/end_no.png",4
+	celload "./img/arrow.png",5
+
+	arrow_y = 175
+
+	onexit *exit
+
+*exit
+	redraw 0
+	pos 0,0
+	celput 1
+
+	gmode 2
+	pos 140,30
+	celput 2,0,0.25,0.25
+
+	pos 50,150
+	celput 3,0,0.2,0.2
+
+	pos 50,250
+	celput 4,0,0.2,0.2
+
+	pos 300,arrow_y
+	celput 6,0,0.05,0.05
+
+	redraw 1
+
+	await 1000/8.5
+	
+	getkey a,40
+	if a=1 : arrow_y = arrow_y + 100
+	if arrow_y > 275 : arrow_y = 175
+
+	getkey a,38
+	if a=1 : arrow_y = arrow_y - 100
+	if arrow_y < 175 : arrow_y = 275
+
+	getkey a,13
+	if a=1 {
+		if arrow_y = 175 : end : else : goto *menu_init
+	}
+
+	goto *exit
