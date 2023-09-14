@@ -1,0 +1,64 @@
+#include "hsp3dish.as"
+
+arrow_y = 175
+
+*menu
+	celload "./img/menu.png",1
+	celload "./img/title.png",2
+	celload "./img/play_button.png",3
+	celload "./img/howto_button.png",4
+	celload "./img/credit_button.png",5
+	celload "./img/arrow.png",6
+
+	redraw 0
+	pos 0,0
+	celput 1
+
+	gmode 2
+	pos 140,30
+	celput 2,0,0.25,0.25
+
+	pos 50,150
+	celput 3,0,0.2,0.2
+
+	pos 50,250
+	celput 4,0,0.2,0.2
+
+	pos 50,350
+	celput 5,0,0.2,0.2
+
+	pos 300,arrow_y
+	celput 6,0,0.05,0.05
+	
+	redraw 1
+	await 1000/30
+
+	getkey a,40
+	if a=1 : arrow_y = arrow_y + 100
+	if arrow_y > 375 : arrow_y = 175
+
+	getkey a,38
+	if a=1 : arrow_y = arrow_y - 100
+	if arrow_y < 175 : arrow_y = 375
+
+	getkey a,13
+	if a=1 {
+		if arrow_y = 175 : goto *play
+	}
+
+	goto *menu
+
+*play
+	celload "./img/play.png",1
+
+	redraw 0
+	pos 0,0
+	celput 1
+
+	redraw 1
+	await 1000/30
+
+	getkey a,27
+	if a=1 : goto *menu
+
+	goto *play	
