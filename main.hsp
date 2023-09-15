@@ -9,8 +9,10 @@ screen 0, 640, 480
 	celload "./img/howto_button.png",4
 	celload "./img/credit_button.png",5
 	celload "./img/arrow.png",6
+	mmload "./bgm/title.ogg",1,1
 
 	arrow_y = 175
+	mmplay 1
 *menu
 	redraw 0
 	pos 0,0
@@ -45,7 +47,10 @@ screen 0, 640, 480
 
 	getkey a,13
 	if a=1 {
-		if arrow_y = 175 : goto *play_init
+		if arrow_y = 175 {
+			mmstop 1
+			goto *play_init
+		}
 		if arrow_y = 275 : goto *howto_init
 		if arrow_y = 375 : goto *credit_init
 	}
@@ -104,6 +109,9 @@ screen 0, 640, 480
 	celload "./img/play.png",1
 	celload "./img/tamadot.png",2
 	celload "./img/parts.png",3
+	
+	mmload "./bgm/play.ogg",1
+	mmload "./se/damege.ogg",2
 
 	celdiv 2,64,64
 	celdiv 3,40,40
@@ -119,11 +127,14 @@ screen 0, 640, 480
 
 	period = 10
 	count = 0
-	tail = 0
+	tail = 1
 	arrow_fig = 0
+	max_fig = 60
 	dim arrow, 20
 	dim arrow_x, 20
 	dim arrow_y, 20
+
+	mmplay 1
 
 	goto *play
 
@@ -136,6 +147,7 @@ screen 0, 640, 480
 	if ima_button = 0 : celput 2,4
 	if ima_button = 1 : celput 2,12+id
 	if ima_button = -1 : celput 2, 28+id
+
 
 	repeat arrow_fig
 		if cnt < tail : continue
@@ -153,7 +165,7 @@ screen 0, 640, 480
 	await 1000/30
 
 	count = count + 1
-	if(count > period){
+	if arrow_fig < max_fig & count > period {
 		arrow_x(arrow_fig) = rnd(10) * 64
 		arrow_y(arrow_fig) = 0
 		count = 0
@@ -178,31 +190,61 @@ screen 0, 640, 480
 	}
 
 	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
-	
+
+	if tail = max_fig {
+		mmstop 1
+		goto *clear_init
+	}
+
 	repeat arrow_fig
 		if cnt < tail : continue
 		arrow_y(cnt) = arrow_y(cnt) + 10
 		if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
 			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 {
+				; mmplay 2	
 				life = life - 1
-				if life = 0 : goto *failed_init
+				if life = 0 {
+					mmstop 1
+					goto *failed_init
+				}
 			}
 		}
-		if arrow_y(cnt) > 480 : tail = cnt
+		if arrow_y(cnt) > 480 : tail = tail + 1
 	loop
 
+	getkey a,27
+	if a=1 {
+		mmstop 1
+		goto *menu_init
+	}
+
+	goto *play
+
+*clear_init
+	celload "./img/play.png",1
+	celload "./img/gameclear.png",2
+
+*clear
+	redraw 0
+	pos 0,0
+	celput 1
+
+	pos 40,100
+	celput 2,0,0.4,0.4
+
 	redraw 1
+
+	await 1000/30
 
 	getkey a,27
 	if a=1 : goto *menu_init
 
-	goto *play
+	goto *clear
 
 
 *failed_init
 	celload "./img/play.png",1
 	celload "./img/gameover.png",2
-	celload "./img/tamadot.png",3
 
 *failed
 	redraw 0
@@ -211,18 +253,13 @@ screen 0, 640, 480
 
 	pos 80,100
 	celput 2,0,0.5,0.5,0
-	
-	pos player_x, player_y
-	celput 3,35
 
 	redraw 1
 
 	await 1000/30
 
 	getkey a,27
-	if a=1 {
-		if arrow_y = 175 : goto *menu_init
-	}
+	if a=1 : goto *menu_init
 
 	goto *failed
 
