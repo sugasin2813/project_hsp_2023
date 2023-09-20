@@ -1,4 +1,5 @@
 #include "hsp3dish.as"
+#include "julius.as"
 
 screen 0, 640, 480
 
@@ -13,6 +14,7 @@ screen 0, 640, 480
 
 	arrow_y = 175
 	mmplay 1
+
 *menu
 	redraw 0
 	pos 0,0
@@ -134,6 +136,17 @@ screen 0, 640, 480
 	dim arrow_x, 20
 	dim arrow_y, 20
 
+	init_julius "move.dic"
+	sockidx = 0
+	domain = "127.0.0.1"
+	PORT = 10500
+
+	sockopen sockidx, domain, PORT
+
+	if stat != 0 {
+		goto *menu
+	}
+
 	mmplay 1
 
 	goto *play
@@ -173,20 +186,26 @@ screen 0, 640, 480
 	}
 
 	ima_button = 0
-	getkey a,37
-	if a=1 : {
-		ima_button = 1
-		player_x = player_x - move_x
-		mae_button = ima_button
-		if player_x < 0 : player_x = 0
-	}
 
-	getkey a,39
-	if a=1 : {
-		ima_button = -1
-		player_x = player_x + move_x
-		mae_button = ima_button
-		if player_x > 580 : player_x = 580
+	sdim words, 4096, 0
+	ddim cm, 0
+
+	if is_recieved(sockidx) = 0 {
+		get_word_list words, cm
+		repeat length(words)
+			if cm(cnt) > 0.7 {
+				if words(cnt) = "LEFT" {
+					ima_button = 1
+					player_x = player_x - move_x
+					mae_button = ima_button
+					if player_x < 0 : player_x = 0
+				} else : if words(cnt) = "RIGHT" {
+					ima_button = -1
+					player_x = player_x + move_x
+					mae_button = ima_button
+					if player_x > 580 : player_x = 580
+				}
+			}
 	}
 
 	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
