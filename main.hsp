@@ -2,6 +2,10 @@
 
 screen 0, 640, 480
 
+*bgm_init
+	mmload "./bgm/title.ogg",1,1
+	mmplay 1
+
 *menu_init
 	celload "./img/menu.png",1
 	celload "./img/title.png",2
@@ -9,10 +13,9 @@ screen 0, 640, 480
 	celload "./img/howto_button.png",4
 	celload "./img/credit_button.png",5
 	celload "./img/arrow.png",6
-	mmload "./bgm/title.ogg",1,1
-
+	
 	arrow_y = 175
-	mmplay 1
+
 *menu
 	redraw 0
 	pos 0,0
@@ -47,10 +50,7 @@ screen 0, 640, 480
 
 	getkey a,13
 	if a=1 {
-		if arrow_y = 175 {
-			mmstop 1
-			goto *play_init
-		}
+		if arrow_y = 175 : goto *difficulty_init
 		if arrow_y = 275 : goto *howto_init
 		if arrow_y = 375 : goto *credit_init
 	}
@@ -104,6 +104,78 @@ screen 0, 640, 480
 
 	goto *credit
 
+*difficulty_init
+	celload "./img/menu.png",1
+	celload "./img/difficulty.png",2
+	celload "./img/shokyu_button.png",3
+	celload "./img/tyukyu_button.png",4
+	celload "./img/jokyu_button.png",5
+	celload "./img/arrow.png",6
+	
+	arrow_y = 175
+
+*difficulty
+	redraw 0
+	pos 0,0
+	celput 1
+
+	gmode 2
+	pos 140,30
+	celput 2,0,0.25,0.25
+
+	pos 50,150
+	celput 3,0,0.2,0.2
+
+	pos 50,250
+	celput 4,0,0.2,0.2
+
+	pos 50,350
+	celput 5,0,0.2,0.2
+
+	pos 300,arrow_y
+	celput 6,0,0.05,0.05
+	
+	redraw 1
+	await 1000/8.5
+
+	getkey a,40
+	if a=1 : arrow_y = arrow_y + 100
+	if arrow_y > 375 : arrow_y = 175
+
+	getkey a,38
+	if a=1 : arrow_y = arrow_y - 100
+	if arrow_y < 175 : arrow_y = 375
+
+	getkey a,13
+	if a=1 {
+		mmstop 1
+		if arrow_y = 175 : goto *shokyu_init
+		if arrow_y = 275 : goto *tyukyu_init
+		if arrow_y = 375 : goto *jokyu_init
+	}
+
+	getkey a,27
+	if a=1 : goto *menu_init
+
+	goto *difficulty
+
+*shokyu_init
+	max_fig = 20
+	diff = 5
+	period = 60
+	goto *play_init
+
+*tyukyu_init
+	max_fig = 40
+	diff = 10 
+	period = 30
+	goto *play_init
+
+*jokyu_init
+	max_fig = 60
+	diff = 15 
+	period = 10
+	goto *play_init
 
 *play_init
 	celload "./img/play.png",1
@@ -125,14 +197,15 @@ screen 0, 640, 480
 	id = 0
 	ima_button = 0
 
-	period = 10
-	count = 0
 	tail = 1
-	arrow_fig = 0
-	max_fig = 60
 	dim arrow, 20
 	dim arrow_x, 20
 	dim arrow_y, 20
+	
+	arrow_x(arrow_fig) = rnd(10) * 64
+	arrow_y(arrow_fig) = 0
+	count = 0
+	arrow_fig = 1
 
 	mmplay 1
 
@@ -198,7 +271,7 @@ screen 0, 640, 480
 
 	repeat arrow_fig
 		if cnt < tail : continue
-		arrow_y(cnt) = arrow_y(cnt) + 10
+		arrow_y(cnt) = arrow_y(cnt) + diff 
 		if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
 			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 {
 				; mmplay 2	
@@ -215,7 +288,7 @@ screen 0, 640, 480
 	getkey a,27
 	if a=1 {
 		mmstop 1
-		goto *menu_init
+		goto *bgm_init
 	}
 
 	goto *play
@@ -223,6 +296,9 @@ screen 0, 640, 480
 *clear_init
 	celload "./img/play.png",1
 	celload "./img/gameclear.png",2
+	mmload "./bgm/clear.ogg",1
+
+	mmplay 1
 
 *clear
 	redraw 0
@@ -237,7 +313,10 @@ screen 0, 640, 480
 	await 1000/30
 
 	getkey a,27
-	if a=1 : goto *menu_init
+	if a=1 : {
+		mmstop 1
+		goto *bgm_init
+	}
 
 	goto *clear
 
@@ -245,6 +324,9 @@ screen 0, 640, 480
 *failed_init
 	celload "./img/play.png",1
 	celload "./img/gameover.png",2
+	mmload "./bgm/over.ogg",1
+
+	mmplay 1
 
 *failed
 	redraw 0
@@ -259,8 +341,10 @@ screen 0, 640, 480
 	await 1000/30
 
 	getkey a,27
-	if a=1 : goto *menu_init
-
+	if a=1 : {
+		mmstop 1
+		goto *bgm_init
+	}
 	goto *failed
 
 *exit_init
