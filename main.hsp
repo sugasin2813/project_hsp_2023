@@ -179,7 +179,7 @@ screen 0, 640, 480
 	goto *loading
 
 *loading
-	celload "loading.png",1
+	celload "./img/loading.png",1
 	redraw 0
 	pos 0,0
 	celput 1
@@ -240,9 +240,8 @@ screen 0, 640, 480
 	if ima_button = 1 : celput 2,12+id
 	if ima_button = -1 : celput 2, 28+id
 
-
 	repeat arrow_fig
-		if cnt < tail : continue
+		if cnt < tail | arrow(cnt) = 1 : continue
 		pos arrow_x(cnt),arrow_y(cnt)
 		celput 3,4,,,3.15
 	loop
@@ -285,6 +284,7 @@ screen 0, 640, 480
 					if player_x > 580 : player_x = 580
 				}
 			}
+		loop
 	}
 
 	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
@@ -298,9 +298,9 @@ screen 0, 640, 480
 		if cnt < tail : continue
 		arrow_y(cnt) = arrow_y(cnt) + diff 
 		if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
-			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 & arrow(cnt) != 0 {
+			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 & arrow(cnt) != 1 {
 				life = life - 1
-				arrow(cnt) = 0
+				arrow(cnt) = 1
 				if life = 0 {
 					mmstop 1
 					goto *failed_init
