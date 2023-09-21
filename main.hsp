@@ -200,7 +200,9 @@ screen 0, 640, 480
 	celload "./img/play.png",1
 	celload "./img/tamadot.png",2
 	celload "./img/parts.png",3
-	
+	celload "./img/ready.png",4
+	celload "./img/go.png",5
+
 	mmload "./bgm/play.ogg",1
 	mmload "./se/damege.ogg",2
 
@@ -225,7 +227,12 @@ screen 0, 640, 480
 	arrow_y(arrow_fig) = 0
 	count = 0
 	arrow_fig = 1
-	
+
+	animation = true
+	ready = true
+	ani_time = 100
+	ani_cnt = 0
+
 	mmplay 1
 
 	goto *play
@@ -240,27 +247,70 @@ screen 0, 640, 480
 	if ima_button = 1 : celput 2,12+id
 	if ima_button = -1 : celput 2, 28+id
 
-	repeat arrow_fig
-		if cnt < tail | arrow(cnt) = 1 : continue
-		pos arrow_x(cnt),arrow_y(cnt)
-		celput 3,4,,,3.15
-	loop
+	if animation {
+		if ready {
+			pos 200,100
+			celput 4
 
-	repeat life
-		pos 40*cnt,0
-		celput 2,45
-	loop
+			ani_cnt = ani_cnt + 1
+			if ani_cnt = ani_time {
+				ani_cnt =0
+				ready = false
+			} 
+		} : else {
+			pos 200,100
+			celput 5
 
-	redraw 1
+			ani_cnt = ani_cnt + 1
+			if ani_cnt = ani_time {
+				animation = false
+			}
+		}
 
-	await 1000/30
+	} : else {
+		repeat arrow_fig
+			if cnt < tail | arrow(cnt) = 1 : continue
+			pos arrow_x(cnt),arrow_y(cnt)
+			celput 3,4,,,3.15
+		loop
 
-	count = count + 1
-	if arrow_fig < max_fig & count > period {
-		arrow_x(arrow_fig) = rnd(10) * 64
-		arrow_y(arrow_fig) = 0
-		count = 0
-		arrow_fig = arrow_fig + 1
+		repeat life
+			pos 40*cnt,0
+			celput 2,45
+		loop
+
+		redraw 1
+
+		await 1000/30
+
+		count = count + 1
+		if arrow_fig < max_fig & count > period {
+			arrow_x(arrow_fig) = rnd(10) * 64
+			arrow_y(arrow_fig) = 0
+			count = 0
+			arrow_fig = arrow_fig + 1
+		}
+
+		if tail = max_fig {
+			mmstop 1
+			goto *clear_init
+		}
+
+		repeat arrow_fig
+			if cnt < tail : continue
+			arrow_y(cnt) = arrow_y(cnt) + diff 
+			if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
+				if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 & arrow(cnt) != 1 {
+					life = life - 1
+					arrow(cnt) = 1
+					if life = 0 {
+						mmstop 1
+						goto *failed_init
+					}
+				}
+			}
+			if arrow_y(cnt) > 480 : tail = tail + 1
+		loop
 	}
 
 	ima_button = 0
@@ -288,27 +338,6 @@ screen 0, 640, 480
 	}
 
 	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
-
-	if tail = max_fig {
-		mmstop 1
-		goto *clear_init
-	}
-
-	repeat arrow_fig
-		if cnt < tail : continue
-		arrow_y(cnt) = arrow_y(cnt) + diff 
-		if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
-			if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 & arrow(cnt) != 1 {
-				life = life - 1
-				arrow(cnt) = 1
-				if life = 0 {
-					mmstop 1
-					goto *failed_init
-				}
-			}
-		}
-		if arrow_y(cnt) > 480 : tail = tail + 1
-	loop
 
 	getkey a,27
 	if a=1 {
