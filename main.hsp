@@ -1,109 +1,13 @@
 #include "hsp3dish.as"
-#include "julius.as"
 
 screen 0, 640, 480
 
-*bgm_init
-	mmload "./bgm/title.ogg",1,1
-	mmplay 1
 
-*menu_init
-	celload "./img/menu.png",1
-	celload "./img/title.png",2
-	celload "./img/play_button.png",3
-	celload "./img/howto_button.png",4
-	celload "./img/credit_button.png",5
-	celload "./img/arrow.png",6
-	
-	arrow_y = 175
 
-*menu
-	redraw 0
-	pos 0,0
-	celput 1
 
-	gmode 2
-	pos 140,30
-	celput 2,0,0.25,0.25
 
-	pos 50,150
-	celput 3,0,0.2,0.2
 
-	pos 50,250
-	celput 4,0,0.2,0.2
 
-	pos 50,350
-	celput 5,0,0.2,0.2
-
-	pos 300,arrow_y
-	celput 6,0,0.05,0.05
-	
-	redraw 1
-	await 1000/8.5
-
-	getkey a,40
-	if a=1 : arrow_y = arrow_y + 100
-	if arrow_y > 375 : arrow_y = 175
-
-	getkey a,38
-	if a=1 : arrow_y = arrow_y - 100
-	if arrow_y < 175 : arrow_y = 375
-
-	getkey a,13
-	if a=1 {
-		if arrow_y = 175 : goto *difficulty_init
-		if arrow_y = 275 : goto *howto_init
-		if arrow_y = 375 : goto *credit_init
-	}
-
-	getkey a,27
-	if a=1 : goto *exit_init
-
-	goto *menu
-
-*howto_init
-	celload "./img/menu.png",1
-	celload "./img/howto.png",2
-
-*howto
-	redraw 0
-	pos 0,0
-	celput 1
-
-	gmode 2
-	pos 50,50
-	celput 2,0,0.15,0.15
-	
-	redraw 1
-
-	await 1000/30
-	
-	getkey a,27
-	if a=1 : goto *menu_init
-
-	goto *howto
-	
-*credit_init
-	celload "./img/menu.png",1
-	celload "./img/credit.png",2
-
-*credit
-	redraw 0
-	pos 0,0
-	celput 1
-
-	gmode 2
-	pos 50,50
-	celput 2,0,0.15,0.15
-	
-	redraw 1
-
-	await 1000/30
-	
-	getkey a,27
-	if a=1 : goto *menu_init
-
-	goto *credit
 
 *difficulty_init
 	celload "./img/menu.png",1
@@ -155,47 +59,31 @@ screen 0, 640, 480
 	}
 
 	getkey a,27
-	if a=1 : goto *menu_init
+	if a=1 : goto *exit_init
 
 	goto *difficulty
 
 *shokyu_init
-	max_fig = 20
-	diff = 5
-	period = 60
-	goto *loading
+	max_fig = 30
+	bias = 1
+	diff = 7
+	period = 50
+	goto *play_init
 
 *tyukyu_init
 	max_fig = 40
-	diff = 10 
-	period = 30
-	goto *loading
+	bias = 1
+	diff = 12 
+	period = 25
+	goto *play_init
 
 *jokyu_init
-	max_fig = 60
-	diff = 15 
-	period = 10
-	goto *loading
+	max_fig = 50
+	bias = 1
+	diff =18
+	period = 13
+	goto *play_init
 
-*loading
-	celload "./img/loading.png",1
-	redraw 0
-	pos 0,0
-	celput 1
-	redraw 1
-
-	init_julius "move.dic"
-	sockidx = 0
-	domain = "127.0.0.1"
-	PORT = 10500
-
-	sockopen sockidx, domain, PORT
-
-	mmstop 1
-
-	if stat != 0 {
-		goto *menu
-	}
 
 
 *play_init
@@ -204,9 +92,12 @@ screen 0, 640, 480
 	celload "./img/parts.png",3
 	celload "./img/ready.png",4
 	celload "./img/go.png",5
-
-	mmload "./bgm/play.ogg",1
-	mmload "./se/damege.ogg",2
+	celload "./img/apple.png",6
+	celload "./img/golden_apple.png",7
+	celload "./img/poison_apple.png",8
+	celload "./img/bakudan.png",9
+	celload "./img/kyukyubako.png",10
+	
 
 	celdiv 2,64,64
 	celdiv 3,40,40
@@ -214,8 +105,10 @@ screen 0, 640, 480
 	player_x = 320
 	prev_x = 320
 	player_y = 420
-	move_x = 50 
+	move_x = 15
+ 
 	life = 3
+	item_fig = 5
 
 	id = 0
 	ima_button = 0
@@ -224,10 +117,12 @@ screen 0, 640, 480
 	tail = 1
 	dim arrow, max_fig 
 	dim arrow_x, max_fig 
-	dim arrow_y, max_fig 
+	dim arrow_y, max_fig
+	dim item, max_fig 
 
 	arrow_x(arrow_fig) = rnd(10) * 64
 	arrow_y(arrow_fig) = 0
+	item(arrow_fig) = rnd(item_fig) +6
 	count = 0
 	arrow_fig = 1
 
@@ -235,8 +130,8 @@ screen 0, 640, 480
 	ready = 1
 	ani_time = 50
 	ani_cnt = 0
+	score = 0
 
-	mmplay 1
 
 	goto *play
 
@@ -275,13 +170,16 @@ screen 0, 640, 480
 		repeat arrow_fig
 			if cnt < tail | arrow(cnt) = 1 : continue
 			pos arrow_x(cnt),arrow_y(cnt)
-			celput 3,4,,,3.15
+			celput item(cnt)
 		loop
 
 		repeat life
 			pos 40*cnt,0
 			celput 2,45
 		loop
+		font "",50
+		pos 420,0
+		mes "score " + score
 
 		redraw 1
 
@@ -290,63 +188,67 @@ screen 0, 640, 480
 		count = count + 1
 		if arrow_fig < max_fig & count > period {
 			arrow_x(arrow_fig) = rnd(10) * 64
-			arrow_y(arrow_fig) = 0
+			sarrow_y(arrow_fig) = 0
+			item(arrow_fig) = rnd(item_fig) +6
 			count = 0
 			arrow_fig = arrow_fig + 1
 		}
-
+		if score>=max_fig-10 {goto *clear_init}
 		if tail = max_fig {
 			mmstop 1
-			goto *clear_init
+			goto *failed_init
 		}
 
 		repeat arrow_fig
 			if cnt < tail : continue
 			arrow_y(cnt) = arrow_y(cnt) + diff 
-			if arrow_y(cnt) + 40 > 460 & arrow_y(cnt) + 40 < 480 {
-				if player_x >= arrow_x(cnt) & player_x <= arrow_x(cnt) + 40 | player_x + 64 >= arrow_x(cnt) & player_x + 64 <= arrow_x(cnt) + 40 & arrow(cnt) != 1 {
-					life = life - 1
+			if arrow_y(cnt) + 64 > 440 & arrow_y(cnt) + 64 < 480 {
+				if player_x >= arrow_x(cnt) - 64 & player_x <= arrow_x(cnt) + 64 & arrow(cnt) = 0 {
+					if item(cnt)=6 {score = score + 1 * bias}
+					if item(cnt)=7 {score = score + 3 * bias}
+					if item(cnt)=8 {life = life - 1}
+					if item(cnt)=9 {life = life - 2}
+					if item(cnt)=10 {
+						life = life + 1
+						if life>3 {life = 3}
+					}
 					arrow(cnt) = 1
 					if life = 0 {
-						mmstop 1
 						goto *failed_init
 					}
 				}
 			}
 			if arrow_y(cnt) > 480 : tail = tail + 1
 		loop
+		
 	}
 
 	ima_button = 0
 
 	sdim words, 4096, 0
 	ddim cm, 0
+	getkey a,37
+        if a=1 : {
+                ima_button = 1
+                player_x = player_x - move_x
+                mae_button = ima_button
+                if player_x < 0 : player_x = 0
+        }
 
-	if is_recieved(sockidx) = 0 {
-		get_word_list words, cm
-		repeat length(words)
-			if cm(cnt) > 0.7 {
-				if words(cnt) = "LEFT" {
-					ima_button = 1
-					player_x = player_x - move_x
-					mae_button = ima_button
-					if player_x < 0 : player_x = 0
-				} else : if words(cnt) = "RIGHT" {
-					ima_button = -1
-					player_x = player_x + move_x
-					mae_button = ima_button
-					if player_x > 580 : player_x = 580
-				}
-			}
-		loop
-	}
+        getkey a,39
+        if a=1 : {
+                ima_button = -1
+                player_x = player_x + move_x
+                mae_button = ima_button
+                if player_x > 580 : player_x = 580
+        }
 
 	if ima_button = mae_button : id = (id + 1) \ 4 : else : id = 0
 
 	getkey a,27
 	if a=1 {
 		mmstop 1
-		goto *bgm_init
+		goto *difficulty_init
 	}
 
 	goto *play
@@ -354,10 +256,7 @@ screen 0, 640, 480
 *clear_init
 	celload "./img/play.png",1
 	celload "./img/gameclear.png",2
-	mmload "./bgm/clear.ogg",1
-
-	mmplay 1
-
+	
 *clear
 	redraw 0
 	pos 0,0
@@ -373,7 +272,7 @@ screen 0, 640, 480
 	getkey a,27
 	if a=1 : {
 		mmstop 1
-		goto *bgm_init
+		goto *difficulty_init
 	}
 
 	goto *clear
@@ -382,10 +281,7 @@ screen 0, 640, 480
 *failed_init
 	celload "./img/play.png",1
 	celload "./img/gameover.png",2
-	mmload "./bgm/over.ogg",1
-
-	mmplay 1
-
+	
 *failed
 	redraw 0
 	pos 0,0
@@ -401,7 +297,7 @@ screen 0, 640, 480
 	getkey a,27
 	if a=1 : {
 		mmstop 1
-		goto *bgm_init
+		goto *difficulty_init
 	}
 	goto *failed
 
@@ -448,7 +344,7 @@ screen 0, 640, 480
 
 	getkey a,13
 	if a=1 {
-		if arrow_y = 175 : end : else : goto *menu_init
+		if arrow_y = 175 : end : else : goto *difficulty_init
 	}
 
 	goto *exit
