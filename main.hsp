@@ -2,13 +2,6 @@
 
 screen 0, 640, 480
 
-
-
-
-
-
-
-
 *difficulty_init
 	celload "./img/menu.png",1
 	celload "./img/difficulty.png",2
@@ -131,6 +124,8 @@ screen 0, 640, 480
 	ani_time = 50
 	ani_cnt = 0
 	score = 0
+
+	randomize
 
 
 	goto *play
